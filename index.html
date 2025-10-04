@@ -144,6 +144,7 @@
           <div class="row">
             <div class="chip">Mes actual: <strong id="current-month">—</strong></div>
             <div class="chip">Proyección neta mes: <strong id="kpi-net">—</strong></div>
+            <div class="chip">Restante este mes: <strong id="kpi-remaining">—</strong></div>
           </div>
         </div>
         <div class="card">
@@ -612,9 +613,11 @@
     const variable = varsSumForYM(ym);
     const installments = installmentsSumForYM(ym);
     const net = -(fixed + variable + installments);
+    const remaining = balance - (fixed + variable + installments);
     const set=(id,val)=>{ const el=$(id); if(el) el.textContent = fmt(val); }
     set('#kpi-balance', balance); set('#kpi-fixed', fixed); set('#kpi-variable', variable); set('#kpi-installments', installments);
     const kn=$('#kpi-net'); if(kn) kn.textContent = fmt(net);
+    const kr=$('#kpi-remaining'); if(kr) kr.textContent = fmt(remaining);
 
     // Proyección 6 meses
     const tbody=$('#projection-body'); if(!tbody) return; tbody.innerHTML='';
