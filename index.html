@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gastos Personales</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E💸%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0b1020;        /* fondo oscuro elegante */
+      --panel:#141a33;     /* tarjetas */
+      --muted:#8ea3b0;     /* texto secundario */
+      --text:#eaf2f8;      /* texto principal */
+      --brand:#6ad79a;     /* acentos */
+      --warn:#ffb84d;      /* advertencia */
+      --danger:#ff6b6b;    /* peligro */
+      --ok:#62d5e8;        /* info */
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, #162048 0, transparent 60%),
+                  radial-gradient(1000px 500px at 110% 10%, #1a2b55 0, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter:saturate(120%) blur(6px);
+      background:linear-gradient(180deg,rgba(11,16,32,.8),rgba(11,16,32,.4));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .container{max-width:1200px;margin:0 auto;padding:16px}
+    h1{font-size:clamp(22px,2.6vw,36px);margin:6px 0 12px 0;letter-spacing:.3px}
+    .subtitle{color:var(--muted);font-size:14px;margin-top:-4px}
+
+    /* Nav */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+    .tab{
+      padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04); color:var(--text); cursor:pointer; user-select:none;
+      transition:transform .06s ease, background .2s ease, border-color .2s ease; font-weight:600; font-size:14px
+    }
+    .tab:hover{transform:translateY(-1px)}
+    .tab.active{background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color:rgba(255,255,255,.22)}
+
+    /* Panels */
+    .grid{display:grid; gap:16px}
+    @media (min-width:900px){
+      .grid-2{grid-template-columns:1.2fr .8fr}
+      .grid-3{grid-template-columns:repeat(3,1fr)}
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.06));
+      border:1px solid rgba(255,255,255,.08); border-radius:var(--radius);
+      padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{margin:0 0 12px 0; font-size:18px}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+    /* Forms */
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+      background:rgba(0,0,0,.18); color:var(--text); outline:none}
+    input::placeholder, textarea::placeholder{color:#9fb2bf7a}
+    .btn{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14); cursor:pointer; font-weight:700}
+    .btn.primary{background:linear-gradient(180deg, #71e0a3, #4ec38c); color:#0b1a12; border-color:#88efbd}
+    .btn.ghost{background:transparent;color:var(--text)}
+    .btn.warn{background:linear-gradient(180deg, #ffd58f, #ffb84d); color:#5a3a00}
+    .btn.danger{background:linear-gradient(180deg, #ffa3a3, #ff6b6b); color:#4a0e0e}
+    .btn:active{transform:translateY(1px)}
+
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:8px 10px; border-bottom:1px dashed rgba(255,255,255,.08)}
+    th{text-align:left; color:var(--muted); font-weight:600}
+    tbody tr:hover{background:rgba(255,255,255,.04)}
+    .right{text-align:right}
+    .chip{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05)}
+
+    .kpi{display:grid; gap:12px}
+    @media(min-width:600px){.kpi{grid-template-columns:repeat(4,1fr)}}
+    .kpi .item{padding:14px;border-radius:16px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.08));
+      border:1px solid rgba(255,255,255,.1)}
+    .kpi .label{color:var(--muted); font-size:12px}
+    .kpi .value{font-size:20px; font-weight:800; letter-spacing:.3px}
+
+    .footer{color:var(--muted); font-size:12px; text-align:center; padding:12px}
+    .spacer{height:8px}
+
+    .sep{height:1px; background:linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.12), rgba(255,255,255,.04)); margin:12px 0}
+    .pill{padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1)}
+
+    .tag{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.14);}
+    .tag.ok{background:rgba(98,213,232,.15); border-color:rgba(98,213,232,.35)}
+    .tag.warn{background:rgba(255,184,77,.15); border-color:rgba(255,184,77,.35)}
+    .tag.danger{background:rgba(255,107,107,.15); border-color:rgba(255,107,107,.35)}
+
+    details summary{cursor:pointer; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Gastos Personales</h1>
+      <div class="subtitle">Control simple y privado (se guarda en tu navegador). Moneda por defecto: ARS.</div>
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-tab="dashboard">📊 Resumen</div>
+        <div class="tab" data-tab="accounts">🏦 Cuentas</div>
+        <div class="tab" data-tab="fixed">📌 Gastos fijos</div>
+        <div class="tab" data-tab="variable">🧾 Gastos variables</div>
+        <div class="tab" data-tab="debts">💳 Deudas (cuotas)</div>
+        <div class="tab" data-tab="settings">⚙️ Ajustes</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- DASHBOARD -->
+    <section class="view" id="view-dashboard">
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>📈 Panorama mensual</h2>
+          <div class="kpi" id="kpi">
+            <div class="item"><div class="label">Saldo total cuentas</div><div class="value" id="kpi-balance">—</div></div>
+            <div class="item"><div class="label">Gastos fijos del mes</div><div class="value" id="kpi-fixed">—</div></div>
+            <div class="item"><div class="label">Gastos variables (mes)</div><div class="value" id="kpi-variable">—</div></div>
+            <div class="item"><div class="label">Cuotas a pagar (mes)</div><div class="value" id="kpi-installments">—</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="row">
+            <div class="chip">Mes actual: <strong id="current-month">—</strong></div>
+            <div class="chip">Proyección neta mes: <strong id="kpi-net">—</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>🗓️ Proyección próximos 6 meses</h2>
+          <table>
+            <thead><tr><th>Mes</th><th class="right">Fijos</th><th class="right">Cuotas</th><th class="right">Variables*</th><th class="right">Neto**</th></tr></thead>
+            <tbody id="projection-body"></tbody>
+          </table>
+          <div class="muted" style="margin-top:8px">
+            * Variables asumen el promedio del último mes. **Neto = -Fijos - Cuotas - Variables.
+          </div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="grid grid-3">
+        <div class="card">
+          <h2>🏦 Cuentas</h2>
+          <table>
+            <thead><tr><th>Cuenta</th><th class="right">Balance</th><th></th></tr></thead>
+            <tbody id="table-accounts"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h2>📌 Fijos</h2>
+          <table>
+            <thead><tr><th>Descripción</th><th class="right">Monto mensual</th><th></th></tr></thead>
+            <tbody id="table-fixed"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h2>💳 Cuotas (mes actual)</h2>
+          <table>
+            <thead><tr><th>Tarjeta</th><th>Descripción</th><th class="right">Cuota</th><th class="right">N°</th></tr></thead>
+            <tbody id="table-installments-now"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOUNTS -->
+    <section class="view" id="view-accounts" hidden>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Agregar cuenta</h2>
+          <div class="row">
+            <div style="flex:1">
+              <label>Nombre</label>
+              <input id="acc-name" placeholder="Ej. Banco Nación – Caja de ahorro" />
+            </div>
+            <div style="width:160px">
+              <label>Balance inicial</label>
+              <input id="acc-balance" type="number" step="0.01" placeholder="0" />
+            </div>
+            <button class="btn primary" id="btn-add-acc">Agregar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Cuentas</h2>
+          <table>
+            <thead><tr><th>Cuenta</th><th class="right">Balance</th><th></th></tr></thead>
+            <tbody id="acc-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIXED EXPENSES -->
+    <section class="view" id="view-fixed" hidden>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Nuevo gasto fijo mensual</h2>
+          <div class="row">
+            <div style="flex:1">
+              <label>Descripción</label>
+              <input id="fx-desc" placeholder="Ej. Alquiler, Luz, Internet" />
+            </div>
+            <div style="width:160px">
+              <label>Monto mensual</label>
+              <input id="fx-amount" type="number" step="0.01" placeholder="0" />
+            </div>
+            <button class="btn primary" id="btn-add-fixed">Agregar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Gastos fijos</h2>
+          <table>
+            <thead><tr><th>Descripción</th><th class="right">Monto</th><th></th></tr></thead>
+            <tbody id="fx-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VARIABLE EXPENSES -->
+    <section class="view" id="view-variable" hidden>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Nuevo gasto variable</h2>
+          <div class="row">
+            <div style="width:150px">
+              <label>Fecha</label>
+              <input id="var-date" type="date" />
+            </div>
+            <div style="width:160px">
+              <label>Monto</label>
+              <input id="var-amount" type="number" step="0.01" placeholder="0" />
+            </div>
+            <div style="flex:1">
+              <label>Descripción / Categoría</label>
+              <input id="var-desc" placeholder="Ej. Supermercado, Transporte, Café" />
+            </div>
+            <button class="btn primary" id="btn-add-var">Agregar</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Gastos variables</h2>
+          <table>
+            <thead><tr><th>Fecha</th><th>Descripción</th><th class="right">Monto</th><th></th></tr></thead>
+            <tbody id="var-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEBTS / INSTALLMENTS -->
+    <section class="view" id="view-debts" hidden>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Nueva compra en cuotas</h2>
+          <div class="row">
+            <div style="flex:1">
+              <label>Tarjeta / Medio</label>
+              <input id="db-card" placeholder="Ej. Visa Banco Macro" />
+            </div>
+            <div style="flex:1">
+              <label>Descripción</label>
+              <input id="db-desc" placeholder="Ej. Notebook, Neumáticos" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div style="width:160px">
+              <label>Monto total</label>
+              <input id="db-total" type="number" step="0.01" placeholder="0" />
+            </div>
+            <div style="width:120px">
+              <label>Cuotas</label>
+              <input id="db-quotes" type="number" min="1" step="1" value="3" />
+            </div>
+            <div style="width:190px">
+              <label>1ª cuota (mes)</label>
+              <input id="db-start" type="month" />
+            </div>
+            <div style="width:160px">
+              <label>Interés total (%)</label>
+              <input id="db-interest" type="number" step="0.1" value="0" />
+            </div>
+            <button class="btn primary" id="btn-add-debt">Agregar</button>
+          </div>
+          <details style="margin-top:8px"><summary>¿Cómo se calculan las cuotas?</summary>
+            <div class="muted">
+              Por defecto se prorratea el total (con interés si se indica) en N cuotas iguales. Se genera el calendario de pagos por mes.
+            </div>
+          </details>
+        </div>
+        <div class="card">
+          <h2>Deudas (todas)</h2>
+          <table>
+            <thead><tr><th>Tarjeta</th><th>Descripción</th><th class="right">Total</th><th class="right">Cuotas</th><th></th></tr></thead>
+            <tbody id="db-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="card">
+        <h2>Calendario de cuotas</h2>
+        <table>
+          <thead><tr><th>Mes</th><th>Tarjeta</th><th>Descripción</th><th class="right">Importe</th><th class="right">#</th><th></th></tr></thead>
+          <tbody id="db-schedule"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS / BACKUP -->
+    <section class="view" id="view-settings" hidden>
+      <div class="grid">
+        <div class="card">
+          <h2>📦 Respaldo de datos</h2>
+          <div class="row">
+            <button class="btn ok" id="btn-export">Exportar JSON</button>
+            <label class="pill" for="file-import" style="cursor:pointer">Importar JSON</label>
+            <input id="file-import" type="file" accept="application/json" hidden />
+            <button class="btn warn" id="btn-clear">Borrar todo (reset)</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Tus datos se almacenan en <strong>localStorage</strong> del navegador.</div>
+        </div>
+        <div class="card">
+          <h2>Preferencias</h2>
+          <div class="row">
+            <div style="width:220px">
+              <label>Moneda</label>
+              <select id="currency">
+                <option value="ARS">ARS (Argentina)</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div style="width:220px">
+              <label>Formato regional</label>
+              <select id="locale">
+                <option value="es-AR">es-AR</option>
+                <option value="es-ES">es-ES</option>
+                <option value="en-US">en-US</option>
+              </select>
+            </div>
+            <button class="btn primary" id="btn-save-prefs">Guardar preferencias</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Acerca de</h2>
+          <div class="muted">App sin dependencias, lista para abrir como archivo local o publicar en cualquier hosting estático. Hecha con HTML, CSS y JavaScript.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">Hecho con 💚. Datos locales y privados.</div>
+
+  <template id="row-actions">
+    <td class="right">
+      <button class="btn ghost" data-edit>✏️</button>
+      <button class="btn danger" data-del>🗑️</button>
+    </td>
+  </template>
+
+  <script>
+  // ======= Utilidades =======
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  const prefsDefault = { currency: 'ARS', locale: 'es-AR' };
+  const state = {
+    prefs: load('prefs') || prefsDefault,
+    accounts: load('accounts') || [], // {id,name,balance}
+    fixed: load('fixed') || [],       // {id, desc, amount}
+    variable: load('variable') || [], // {id, date, desc, amount}
+    debts: load('debts') || []        // {id, card, desc, total, quotes, startYm, interestPct, schedule:[{ym, amount, n, paid:false}]}
+  };
+
+  function save(key, val){ localStorage.setItem('gp_'+key, JSON.stringify(val)); }
+  function load(key){ try{ return JSON.parse(localStorage.getItem('gp_'+key)); }catch{ return null; } }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function fmt(n){ try{ return new Intl.NumberFormat(state.prefs.locale, {style:'currency', currency:state.prefs.currency}).format(Number(n||0)); }catch{ return Number(n||0).toFixed(2); } }
+  function ymOf(date){ // YYYY-MM
+    const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  function monthName(ym){ const [y,m] = ym.split('-').map(Number); return new Date(y, m-1, 1).toLocaleDateString(state.prefs.locale, {month:'long', year:'numeric'}); }
+  function todayYM(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+  // ======= Tabs =======
+  const views = {
+    dashboard: $('#view-dashboard'),
+    accounts: $('#view-accounts'),
+    fixed: $('#view-fixed'),
+    variable: $('#view-variable'),
+    debts: $('#view-debts'),
+    settings: $('#view-settings')
+  };
+  $$('#tabs .tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      $$('#tabs .tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      Object.values(views).forEach(v=>v.hidden=true);
+      views[tab.dataset.tab].hidden=false;
+      renderAll();
+    });
+  });
+
+  // ======= Accounts =======
+  $('#btn-add-acc').addEventListener('click', ()=>{
+    const name=$('#acc-name').value.trim();
+    const balance=Number($('#acc-balance').value||0);
+    if(!name) return alert('Ingresá un nombre');
+    state.accounts.push({id:uid(), name, balance});
+    save('accounts', state.accounts);
+    $('#acc-name').value=''; $('#acc-balance').value='';
+    renderAccounts(); renderDashboard();
+  });
+
+  function renderAccounts(){
+    const fill = (tbodyId, list) => {
+      const tbody=$(tbodyId); tbody.innerHTML='';
+      list.forEach(acc=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${acc.name}</td><td class="right">${fmt(acc.balance)}</td>`;
+        const tpl=$('#row-actions').content.cloneNode(true);
+        const td=tpl.querySelector('td'); tr.appendChild(td);
+        td.querySelector('[data-edit]').onclick=()=>{
+          const name=prompt('Nombre de la cuenta:', acc.name); if(name===null) return;
+          const balance=Number(prompt('Balance:', acc.balance)); if(Number.isNaN(balance)) return;
+          acc.name=name.trim(); acc.balance=balance; save('accounts', state.accounts); renderAll();
+        };
+        td.querySelector('[data-del]').onclick=()=>{
+          if(confirm('¿Eliminar cuenta?')){ state.accounts=state.accounts.filter(a=>a.id!==acc.id); save('accounts', state.accounts); renderAll(); }
+        };
+        tbody.appendChild(tr);
+      });
+    };
+    fill('#acc-body', state.accounts);
+    fill('#table-accounts', state.accounts);
+    $('#kpi-balance').textContent = fmt(state.accounts.reduce((s,a)=>s+a.balance,0));
+  }
+
+  // ======= Fixed =======
+  $('#btn-add-fixed').addEventListener('click', ()=>{
+    const desc=$('#fx-desc').value.trim();
+    const amount=Number($('#fx-amount').value||0);
+    if(!desc || amount<=0) return alert('Completá descripción y monto>0');
+    state.fixed.push({id:uid(), desc, amount}); save('fixed', state.fixed);
+    $('#fx-desc').value=''; $('#fx-amount').value=''; renderFixed(); renderDashboard();
+  });
+
+  function renderFixed(){
+    const tbody=$('#fx-body'); const t2=$('#table-fixed'); tbody.innerHTML=''; t2.innerHTML='';
+    state.fixed.forEach(it=>{
+      const makeRow=(actions=true)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${it.desc}</td><td class="right">${fmt(it.amount)}</td>`;
+        if(actions){
+          const td=document.createElement('td'); td.className='right';
+          const b1=document.createElement('button'); b1.className='btn ghost'; b1.textContent='✏️'; b1.onclick=()=>{
+            const desc=prompt('Descripción:', it.desc); if(desc===null) return;
+            const amount=Number(prompt('Monto:', it.amount)); if(Number.isNaN(amount)) return;
+            it.desc=desc.trim(); it.amount=amount; save('fixed', state.fixed); renderAll();
+          };
+          const b2=document.createElement('button'); b2.className='btn danger'; b2.textContent='🗑️'; b2.onclick=()=>{
+            if(confirm('¿Eliminar gasto fijo?')){ state.fixed=state.fixed.filter(x=>x.id!==it.id); save('fixed', state.fixed); renderAll(); }
+          };
+          td.append(b1,b2); tr.appendChild(td);
+        }
+        return tr;
+      }
+      tbody.appendChild(makeRow(true));
+      t2.appendChild(makeRow(false));
+    });
+    const total = state.fixed.reduce((s,x)=>s+x.amount,0);
+    $('#kpi-fixed').textContent = fmt(total);
+  }
+
+  // ======= Variable =======
+  $('#btn-add-var').addEventListener('click', ()=>{
+    const date = $('#var-date').value || new Date().toISOString().slice(0,10);
+    const desc = $('#var-desc').value.trim();
+    const amount = Number($('#var-amount').value||0);
+    if(!desc || amount<=0) return alert('Completá descripción y monto>0');
+    state.variable.push({id:uid(), date, desc, amount}); save('variable', state.variable);
+    $('#var-desc').value=''; $('#var-amount').value=''; renderVariable(); renderDashboard();
+  });
+
+  function renderVariable(){
+    const tbody=$('#var-body'); tbody.innerHTML='';
+    const rows = [...state.variable].sort((a,b)=>b.date.localeCompare(a.date));
+    rows.forEach(it=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${new Date(it.date).toLocaleDateString(state.prefs.locale)}</td><td>${it.desc}</td><td class='right'>${fmt(it.amount)}</td>`;
+      const td=document.createElement('td'); td.className='right';
+      const b1=document.createElement('button'); b1.className='btn ghost'; b1.textContent='✏️'; b1.onclick=()=>{
+        const date=prompt('Fecha (YYYY-MM-DD):', it.date) || it.date;
+        const desc=prompt('Descripción/Categoría:', it.desc); if(desc===null) return;
+        const amount=Number(prompt('Monto:', it.amount)); if(Number.isNaN(amount)) return;
+        it.date=date; it.desc=desc.trim(); it.amount=amount; save('variable', state.variable); renderAll();
+      };
+      const b2=document.createElement('button'); b2.className='btn danger'; b2.textContent='🗑️'; b2.onclick=()=>{
+        if(confirm('¿Eliminar gasto variable?')){ state.variable = state.variable.filter(x=>x.id!==it.id); save('variable', state.variable); renderAll(); }
+      };
+      td.append(b1,b2); tr.appendChild(td); tbody.appendChild(tr);
+    });
+  }
+
+  function varsSumForYM(ym){
+    return state.variable.filter(v=>ymOf(v.date)===ym).reduce((s,x)=>s+x.amount,0);
+  }
+
+  // ======= Debts / Installments =======
+  $('#btn-add-debt').addEventListener('click', ()=>{
+    const card=$('#db-card').value.trim();
+    const desc=$('#db-desc').value.trim();
+    const total=Number($('#db-total').value||0);
+    const quotes=parseInt($('#db-quotes').value||1,10);
+    const start=$('#db-start').value || todayYM();
+    const interest=Number($('#db-interest').value||0);
+    if(!card || !desc || total<=0 || quotes<1) return alert('Completá los datos (monto>0, cuotas>=1)');
+    const withInterest = total * (1 + interest/100);
+    const per = Math.round((withInterest/quotes) * 100) / 100; // 2 dec
+    const schedule=[];
+    const [sy, sm] = start.split('-').map(Number);
+    for(let i=0;i<quotes;i++){
+      const date = new Date(sy, sm-1+i, 1);
+      schedule.push({ ym: ymOf(date), amount: per, n: i+1, paid:false });
+    }
+    state.debts.push({id:uid(), card, desc, total:withInterest, quotes, startYm:start, interestPct:interest, schedule});
+    save('debts', state.debts);
+    // clear
+    ['#db-card','#db-desc','#db-total','#db-quotes','#db-start','#db-interest'].forEach(s=>$(s).value='');
+    renderDebts(); renderDashboard();
+  });
+
+  function renderDebts(){
+    const tbody=$('#db-body'); tbody.innerHTML='';
+    state.debts.forEach(d=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${d.card}</td><td>${d.desc}</td><td class='right'>${fmt(d.total)}</td><td class='right'>${d.quotes}</td>`;
+      const td=document.createElement('td'); td.className='right';
+      const b1=document.createElement('button'); b1.className='btn ghost'; b1.textContent='✏️'; b1.onclick=()=>{
+        const card=prompt('Tarjeta/Medio:', d.card); if(card===null) return;
+        const desc=prompt('Descripción:', d.desc); if(desc===null) return;
+        d.card=card.trim(); d.desc=desc.trim(); save('debts', state.debts); renderAll();
+      };
+      const b2=document.createElement('button'); b2.className='btn danger'; b2.textContent='🗑️'; b2.onclick=()=>{
+        if(confirm('¿Eliminar deuda?')){ state.debts = state.debts.filter(x=>x.id!==d.id); save('debts', state.debts); renderAll(); }
+      };
+      td.append(b1,b2); tr.appendChild(td); tbody.appendChild(tr);
+    });
+
+    const sched=$('#db-schedule'); sched.innerHTML='';
+    const all = state.debts.flatMap(d=> d.schedule.map(s=> ({...s, card:d.card, desc:d.desc, debtId:d.id})) );
+    all.sort((a,b)=>a.ym.localeCompare(b.ym));
+    all.forEach(it=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${monthName(it.ym)}</td><td>${it.card}</td><td>${it.desc}</td><td class='right'>${fmt(it.amount)}</td><td class='right'><span class='tag ${it.paid?'ok':'warn'}'>${it.n}${it.paid?' ✓':''}</span></td>`;
+      const td=document.createElement('td'); td.className='right';
+      const b=document.createElement('button'); b.className='btn ' + (it.paid? 'warn':'primary'); b.textContent= it.paid ? 'Desmarcar' : 'Marcar pagada';
+      b.onclick=()=>{ const debt=state.debts.find(d=>d.id===it.debtId); const s=debt.schedule.find(x=>x.ym===it.ym && x.n===it.n); s.paid=!s.paid; save('debts', state.debts); renderAll(); };
+      td.appendChild(b); tr.appendChild(td); sched.appendChild(tr);
+    });
+
+    // Dashboard: cuotas del mes
+    const ym=todayYM();
+    const now = state.debts.flatMap(d=> d.schedule.filter(s=>s.ym===ym) );
+    const tb=$('#table-installments-now'); tb.innerHTML='';
+    now.forEach(s=>{
+      const d=state.debts.find(x=>x.schedule.includes(s));
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${d.card}</td><td>${d.desc}</td><td class='right'>${fmt(s.amount)}</td><td class='right'>${s.n}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  function installmentsSumForYM(ym){
+    return state.debts.flatMap(d=>d.schedule).filter(s=>s.ym===ym && !s.paid).reduce((s,x)=>s+x.amount,0);
+  }
+
+  // ======= Dashboard / Proyección =======
+  function renderDashboard(){
+    const ym = todayYM();
+    $('#current-month').textContent = monthName(ym);
+    const balance = state.accounts.reduce((s,a)=>s+a.balance,0);
+    const fixed = state.fixed.reduce((s,x)=>s+x.amount,0);
+    const variable = varsSumForYM(ym);
+    const installments = installmentsSumForYM(ym);
+    const net = -(fixed + variable + installments);
+    $('#kpi-balance').textContent = fmt(balance);
+    $('#kpi-fixed').textContent = fmt(fixed);
+    $('#kpi-variable').textContent = fmt(variable);
+    $('#kpi-installments').textContent = fmt(installments);
+    $('#kpi-net').textContent = fmt(net);
+
+    // Proyección 6 meses
+    const tbody=$('#projection-body'); tbody.innerHTML='';
+    // promedio variables del mes actual (si no hay, 0)
+    const avgVar = variable;
+    for(let i=0;i<6;i++){
+      const d=new Date(); d.setMonth(d.getMonth()+i);
+      const ymi=ymOf(d);
+      const row=document.createElement('tr');
+      const fxf = state.fixed.reduce((s,x)=>s+x.amount,0);
+      const ins = installmentsSumForYM(ymi);
+      const vars = (i===0? variable : avgVar);
+      const neti = -(fxf + ins + vars);
+      row.innerHTML = `<td>${monthName(ymi)}</td><td class='right'>${fmt(fxf)}</td><td class='right'>${fmt(ins)}</td><td class='right'>${fmt(vars)}</td><td class='right'>${fmt(neti)}</td>`;
+      tbody.appendChild(row);
+    }
+  }
+
+  // ======= Settings / Backup =======
+  $('#btn-export').addEventListener('click', ()=>{
+    const payload = { version:1, exportedAt:new Date().toISOString(), data: state };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='gastos_personales_backup.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#file-import').addEventListener('change', (ev)=>{
+    const file=ev.target.files[0]; if(!file) return;
+    const rd=new FileReader(); rd.onload=()=>{
+      try{
+        const parsed=JSON.parse(rd.result);
+        if(!parsed.data) throw new Error('Estructura inválida');
+        Object.assign(state, parsed.data);
+        save('prefs', state.prefs); save('accounts', state.accounts); save('fixed', state.fixed); save('variable', state.variable); save('debts', state.debts);
+        renderAll(); alert('Datos importados');
+      }catch(e){ alert('No se pudo importar: '+e.message); }
+    }; rd.readAsText(file);
+  });
+  $('#btn-clear').addEventListener('click', ()=>{
+    if(confirm('Esto borrará todos los datos guardados en este navegador. ¿Continuar?')){
+      ['prefs','accounts','fixed','variable','debts'].forEach(k=>localStorage.removeItem('gp_'+k));
+      location.reload();
+    }
+  });
+  // Prefs
+  function loadPrefsUI(){ $('#currency').value=state.prefs.currency; $('#locale').value=state.prefs.locale; }
+  $('#btn-save-prefs').addEventListener('click', ()=>{
+    state.prefs.currency=$('#currency').value; state.prefs.locale=$('#locale').value; save('prefs', state.prefs); renderAll();
+  });
+
+  // ======= Init =======
+  function renderAll(){ loadPrefsUI(); renderAccounts(); renderFixed(); renderVariable(); renderDebts(); renderDashboard(); }
+  // Prefill date for variable expense
+  $('#var-date').value = new Date().toISOString().slice(0,10);
+  renderAll();
+  </script>
+</body>
+</html>
