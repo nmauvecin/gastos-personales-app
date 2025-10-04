@@ -100,7 +100,31 @@
     .tag.danger{background:rgba(255,107,107,.15); border-color:rgba(255,107,107,.35)}
 
     details summary{cursor:pointer; color:var(--muted)}
-  </style>
+    /* ====== Mobile-friendly tweaks ====== */
+  @media (max-width: 700px){
+    .container{padding:12px}
+    .tabs{overflow-x:auto; gap:6px; padding-bottom:6px; -webkit-overflow-scrolling:touch}
+    .tab{flex:0 0 auto; font-size:13px; padding:10px 12px}
+
+    /* Pilas en una columna */
+    .grid, .grid-2, .grid-3{display:block}
+    .card{padding:12px; border-radius:14px}
+
+    /* Controles táctiles cómodos */
+    input,select,textarea,.btn{font-size:16px; min-height:44px}
+    .row{flex-direction:column; align-items:stretch}
+
+    /* Tablas scrolleables horizontalmente */
+    table{display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap}
+    th,td{padding:10px}
+
+    header .container{padding-bottom:8px}
+    main.container{padding-bottom:80px}
+
+    /* Footer visible sin tapar contenido */
+    .footer{position:sticky; bottom:0; background:linear-gradient(180deg, rgba(11,16,32,.4), rgba(11,16,32,.9)); padding:10px 16px; border-top:1px solid rgba(255,255,255,.06)}
+  }
+</style>
 </head>
 <body>
   <header>
