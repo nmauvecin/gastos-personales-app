@@ -300,8 +300,8 @@
           </div>
           <div class="row" style="margin-top:8px">
             <div style="width:160px">
-              <label>Monto total</label>
-              <input id="db-total" type="number" step="0.01" placeholder="0" />
+              <label>Monto por cuota</label>
+              <input id="db-per" type="number" step="0.01" placeholder="0" />
             </div>
             <div style="width:120px">
               <label>Cuotas</label>
@@ -311,15 +311,11 @@
               <label>1ª cuota (mes)</label>
               <input id="db-start" type="month" />
             </div>
-            <div style="width:160px">
-              <label>Interés total (%)</label>
-              <input id="db-interest" type="number" step="0.1" value="0" />
-            </div>
             <button class="btn primary" id="btn-add-debt">Agregar</button>
           </div>
           <details style="margin-top:8px"><summary>¿Cómo se calculan las cuotas?</summary>
             <div class="muted">
-              Por defecto se prorratea el total (con interés si se indica) en N cuotas iguales. Se genera el calendario de pagos por mes.
+              Indicás el <strong>monto de cada cuota</strong> y la cantidad. La app genera el calendario mensual automáticamente. No se aplica interés.
             </div>
           </details>
         </div>
@@ -544,21 +540,25 @@
   }
 
   // ======= Debts / Installments =======
-  $('#btn-add-debt').addEventListener('click', ()=>{
+  $$('#btn-add-debt').addEventListener('click', ()=>{
     const card=$('#db-card').value.trim();
     const desc=$('#db-desc').value.trim();
-    const total=Number($('#db-total').value||0);
+    const per=Number($('#db-per').value||0);
     const quotes=parseInt($('#db-quotes').value||1,10);
     const start=$('#db-start').value || todayYM();
-    const interest=Number($('#db-interest').value||0);
-    if(!card || !desc || total<=0 || quotes<1) return alert('Completá los datos (monto>0, cuotas>=1)');
-    const withInterest = total * (1 + interest/100);
-    const per = Math.round((withInterest/quotes) * 100) / 100; // 2 dec
+    if(!card || !desc || per<=0 || quotes<1) return alert('Completá los datos (cuota>0, cuotas>=1)');
     const schedule=[];
     const [sy, sm] = start.split('-').map(Number);
     for(let i=0;i<quotes;i++){
       const date = new Date(sy, sm-1+i, 1);
       schedule.push({ ym: ymOf(date), amount: per, n: i+1, paid:false });
+    }
+    const total = Math.round((per*quotes)*100)/100;
+    state.debts.push({id:uid(), card, desc, total, quotes, startYm:start, perAmount:per, schedule});
+    save('debts', state.debts);
+    ['#db-card','#db-desc','#db-per','#db-quotes','#db-start'].forEach(s=>$(s).value='');
+    renderDebts(); renderDashboard();
+  });
     }
     state.debts.push({id:uid(), card, desc, total:withInterest, quotes, startYm:start, interestPct:interest, schedule});
     save('debts', state.debts);
